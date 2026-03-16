@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AquaDash</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <div class="start-screen" id="startScreen">
+      <h1>AquaDash</h1>
+      <p>Crocodile Adventure</p>
+
+      <button id="startBtn">Start Game</button>
+      <button id="infoBtn">Instructions</button>
+    </div>
+
+    <div class="instructions hidden" id="instructionsBox">
+      <h2>How to play</h2>
+      <p>Use the arrow keys to move.</p>
+      <p>Use space to jump.</p>
+      <p>Collect coins and avoid enemies.</p>
+    </div>
+
+    <canvas id="game" width="800" height="400" class="hidden"></canvas>
+   <div class="game-info hidden" id="gameInfo"> 
+  <p id="score">Score: 0</p>
+  <p id="lives">Lives: 3</p>
+  <p id="time">Time: 0</p>
+  </div>
+   <script src="/java script/script.js"></script>
+
+  </body>
+</html>
