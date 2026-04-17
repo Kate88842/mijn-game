@@ -1,37 +1,191 @@
 body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: linear-gradient(to bottom, #4fc3f7, #0288d1);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    flex-direction: column;
-    color: rgb(215, 8, 139);
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(to bottom, #4fc3f7, #0288d1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  flex-direction: column;
+  color: rgb(235, 9, 178);
+  overflow: hidden;
+  font-family: 'Boldonse', system-ui;
+  font-weight: 200;
+  font-style: normal;
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
 
+/* СТАРТОВЫЙ ЭКРАН */
+.start-screen {
+  text-align: center;
+  padding: 30px;
+}
+
+.start-screen h1 {
+  font-size: 60px; /* было 72 */
+  margin-bottom: 10px;
+  transition: all 0.3s ease;
+}
+
+.start-screen h1:hover {
+  color: #12e432;
+  text-shadow:
+    0 0 5px #00e6e6,
+    0 0 10px #00e6e6;
+}
+
+.start-screen p {
+  font-size: 26px; /* было 32 */
+  margin-bottom: 25px;
+  transition: all 0.3s ease;
+}
+
+.start-screen p:hover {
+  color: #1eec08;
+  text-shadow:
+    0 0 3px #66ffff,
+    0 0 6px #66ffff;
+}
+
+/* ИНСТРУКЦИИ */
+.instructions {
+  text-align: center;
+  font-size: 22px; /* было 28 */
+  margin-bottom: 20px;
+}
+
+.instructions h2 {
+  font-size: 32px; /* было 42 */
+  margin-bottom: 15px;
+}
+
+.instructions p {
+  font-size: 20px; /* было 26 */
+  margin: 8px 0;
+}
+
+/* КНОПКИ */
+button {
+  font-size: 22px; /* было 28 */
+  padding: 14px 24px; /* было 16 28 */
+  margin: 10px;
+  border: none;
+  border-radius: 12px;
+  background-color: #d709ee;
+  color: #00ffff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 20px #00ffff;
+}
+
+/* ИГРОВОЕ ПОЛЕ */
 canvas {
   background-color: #b3e5fc;
-  border: 3px solid white;
+  border: 3px solid #00ffff;
   border-radius: 15px;
+  box-shadow: 0 0 20px #00ffff;
+  max-width: 90vw;
+  max-height: 70vh;
 }
 
+/* ИНФОРМАЦИЯ В ИГРЕ */
 .game-info {
-    font-size: 28px;
-    font-weight: bold;
-    margin-top: 20px;
+  font-size: 26px; /* было 34 */
+  font-weight: bold;
+  margin-top: 20px;
+  display: flex;
+  gap: 20px; /* было 30 */
+  justify-content: center;
+  color: #00ffff;
+  text-shadow:
+    0 0 5px #00ffff,
+    0 0 10px #00ffff,
+    0 0 20px #00ffff;
 }
 
-.game-info {
-    font-size: 28px;
-    color: #00ffff;
+/* GAME OVER */
+#gameOverScreen {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(10, 31, 68, 0.9);
+  padding: 50px;
+  border: 4px solid #d709ee;
+  border-radius: 20px;
+  text-align: center;
+  z-index: 100;
+  box-shadow: 0 0 40px #d709ee;
+}
 
-    text-shadow:
-        0 0 5px #00ffff,
-        0 0 10px #00ffff,
-        0 0 20px #00ffff;
+#gameOverScreen h1 {
+  font-size: 64px; /* было 80 */
+  color: #ff4d4d;
+  text-shadow: 0 0 15px #ff4d4d;
+  margin-bottom: 10px;
+}
+
+#gameOverScreen p {
+  font-size: 28px; /* было 36 */
+  color: #fff;
+  margin-bottom: 30px;
+}
+
+/* RESTART */
+#restartBtn {
+  background-color: #12e432;
+  color: #000;
+}
+
+#restartBtn:hover {
+  box-shadow: 0 0 25px #12e432;
+}
+
+/* WIN */
+#winScreen {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(10, 31, 68, 0.92);
+  padding: 50px;
+  border: 4px solid #12e432;
+  border-radius: 20px;
+  text-align: center;
+  z-index: 100;
+  box-shadow: 0 0 40px #12e432;
+}
+
+#winScreen h1 {
+  font-size: 64px; /* было 80 */
+  color: #12e432;
+  text-shadow:
+    0 0 10px #12e432,
+    0 0 20px #12e432,
+    0 0 30px #12e432;
+  margin-bottom: 10px;
+}
+
+#winScreen p {
+  font-size: 28px; /* было 36 */
+  color: #fff;
+  margin-bottom: 30px;
+}
+
+#nextBtn {
+  background-color: #d709ee;
+  color: #00ffff;
+}
+
+#nextBtn:hover {
+  box-shadow: 0 0 25px #d709ee;
 }

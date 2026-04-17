@@ -1,84 +1,535 @@
-let element = document.getElementById("startBtn");
-
-element.addEventListener("click", () => {
-  console.log("AquaDash game started");
-
-  const startBtn = document.getElementById("startBtn");
+const startBtn = document.getElementById("startBtn");
 const infoBtn = document.getElementById("infoBtn");
+const restartBtn = document.getElementById("restartBtn");
+const nextBtn = document.getElementById("nextBtn");
 const startScreen = document.getElementById("startScreen");
 const instructionsBox = document.getElementById("instructionsBox");
+const gameInfo = document.getElementById("gameInfo");
+const gameOverScreen = document.getElementById("gameOverScreen");
+const winScreen = document.getElementById("winScreen");
+const winScore = document.getElementById("winScore");
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-let crocodile = {
-  x: 100,
-  y: 300,
-  width: 50,
-  height: 50,
-  color: "green"
+let player = { x: 80, y: 250, w: 78, h: 42 };
+let enemy = { x: 620, y: 260, w: 48, h: 34, speed: 2, dir: 1 };
+let coin = { x: 360, y: 140, r: 12 };
+
+let level = 1;
+let coinGoal = 10;
+let score = 0;
+let lives = 3;
+let time = 0;
+
+let started = false;
+let gameOver = false;
+let won = false;
+
+let vy = 0;
+let gravity = 0.6;
+let jumps = 0;
+let maxJumps = 2;
+let facingRight = true;
+
+let waterY = 360;
+let waveOffset = 0;
+let timer;
+let splashes = [];
+
+const keys = {
+  left: false,
+  right: false
 };
 
+const level1Platforms = [
+  { x: 0, y: 300, w: 180, h: 20 },
+  { x: 220, y: 220, w: 160, h: 20 },
+  { x: 430, y: 160, w: 160, h: 20 },
+  { x: 640, y: 280, w: 160, h: 20 }
+];
+
+const level2Platforms = [
+  { x: 0, y: 300, w: 120, h: 20 },
+  { x: 170, y: 240, w: 120, h: 20 },
+  { x: 340, y: 190, w: 120, h: 20 },
+  { x: 510, y: 240, w: 120, h: 20 },
+  { x: 680, y: 170, w: 120, h: 20 }
+];
+
+const level3Platforms = [
+  { x: 0, y: 300, w: 100, h: 20 },
+  { x: 140, y: 250, w: 110, h: 20 },
+  { x: 290, y: 200, w: 110, h: 20 },
+  { x: 440, y: 150, w: 110, h: 20 },
+  { x: 590, y: 220, w: 110, h: 20 },
+  { x: 720, y: 170, w: 80, h: 20 }
+];
+
+let platforms = level1Platforms;
+
+// ---------- UI ----------
+function formatTime(seconds) {
+  let m = Math.floor(seconds / 60);
+  let s = seconds % 60;
+  return `${m < 10 ? "0" : ""}${m}:${s < 10 ? "0" : ""}${s}`;
+}
+
+function updateUI() {
+  document.getElementById("score").innerText = `Coins: ${score}/${coinGoal}`;
+  document.getElementById("lives").innerText = `Lives: ${lives}`;
+  document.getElementById("time").innerText = `Time: ${formatTime(time)}`;
+}
+
+function startTimer() {
+  clearInterval(timer);
+  timer = setInterval(() => {
+    if (started && !gameOver && !won) {
+      time++;
+      updateUI();
+    }
+  }, 1000);
+}
+
+// ---------- DRAW ----------
+function drawBackground() {
+  const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  sky.addColorStop(0, "#0b2454");
+  sky.addColorStop(1, "#123f84");
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function drawWater() {
+  ctx.fillStyle = "#1e90ff";
+  ctx.fillRect(0, waterY, canvas.width, canvas.height - waterY);
+
+  ctx.fillStyle = "#67d4ff";
+  for (let i = -40; i < canvas.width + 40; i += 40) {
+    ctx.beginPath();
+    ctx.arc(i + waveOffset, waterY, 20, 0, Math.PI, true);
+    ctx.fill();
+  }
+
+  waveOffset += 1.8;
+  if (waveOffset >= 40) waveOffset = 0;
+}
+
+function drawPlatforms() {
+  for (let p of platforms) {
+    ctx.fillStyle = "#a64b2a";
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+
+    ctx.fillStyle = "#d66b3a";
+    ctx.fillRect(p.x, p.y, p.w, 6);
+
+    ctx.fillStyle = "#7a3218";
+    ctx.fillRect(p.x, p.y + p.h - 4, p.w, 4);
+  }
+}
+
+function drawCoin() {
+  ctx.fillStyle = "#f8c400";
+  ctx.beginPath();
+  ctx.arc(coin.x, coin.y, coin.r, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#ffe27a";
+  ctx.beginPath();
+  ctx.arc(coin.x - 3, coin.y - 3, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "#d29d00";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+function drawEnemy() {
+  const x = enemy.x;
+  const y = enemy.y;
+
+  ctx.fillStyle = "#ff553d";
+  ctx.fillRect(x + 4, y + 8, 38, 18);
+
+  ctx.fillStyle = "#d93b26";
+  ctx.fillRect(x, y + 12, 48, 16);
+
+  ctx.fillStyle = "white";
+  ctx.fillRect(x + 8, y + 10, 8, 8);
+  ctx.fillRect(x + 30, y + 10, 8, 8);
+
+  ctx.fillStyle = "black";
+  ctx.fillRect(x + 11, y + 12, 3, 4);
+  ctx.fillRect(x + 33, y + 12, 3, 4);
+  ctx.fillStyle = "#7a1208";
+  ctx.fillRect(x + 4, y + 28, 4, 6);
+  ctx.fillRect(x + 14, y + 28, 4, 6);
+  ctx.fillRect(x + 30, y + 28, 4, 6);
+  ctx.fillRect(x + 40, y + 28, 4, 6);
+}
+
 function drawCrocodile() {
-  ctx.fillStyle = crocodile.color;
-  ctx.fillRect(crocodile.x, crocodile.y, crocodile.width, crocodile.height);
+  ctx.save();
+
+  if (!facingRight) {
+    ctx.translate(player.x + player.w / 2, 0);
+    ctx.scale(-1, 1);
+    ctx.translate(-(player.x + player.w / 2), 0);
+  }
+
+  const x = player.x;
+  const y = player.y;
+  const jumpOffset = vy < 0 ? -4 : vy > 0 ? 4 : 0;
+
+  // tail
+  ctx.fillStyle = "#3a8f08";
+  ctx.fillRect(x - 16, y + 18 + jumpOffset, 16, 7);
+
+  // body
+  ctx.fillStyle = "#59d10b";
+  ctx.fillRect(x, y + 12 + jumpOffset, 52, 22);
+
+  // back scales
+  ctx.fillStyle = "#3ea108";
+  ctx.fillRect(x + 6, y + 8 + jumpOffset, 8, 6);
+  ctx.fillRect(x + 18, y + 5 + jumpOffset, 8, 7);
+  ctx.fillRect(x + 30, y + 8 + jumpOffset, 8, 6);
+
+  // head
+  ctx.fillStyle = "#63e20e";
+  ctx.fillRect(x + 42, y + 2 + jumpOffset, 30, 16);
+
+  // jaw
+  ctx.fillStyle = "#4fb40d";
+  ctx.fillRect(x + 50, y + 15 + jumpOffset, 22, 8);
+
+  // eye
+  ctx.fillStyle = "white";
+  ctx.fillRect(x + 54, y + 5 + jumpOffset, 9, 9);
+
+  ctx.fillStyle = "black";
+  ctx.fillRect(x + 58, y + 8 + jumpOffset, 3, 4);
+
+  // teeth
+  ctx.fillStyle = "white";
+  ctx.fillRect(x + 55, y + 18 + jumpOffset, 4, 4);
+  ctx.fillRect(x + 63, y + 18 + jumpOffset, 4, 4);
+
+  // legs
+  ctx.fillStyle = "#2d7806";
+  ctx.fillRect(x + 8, y + 32 + jumpOffset, 8, 8);
+  ctx.fillRect(x + 28, y + 32 + jumpOffset, 8, 8);
+
+  ctx.restore();
 }
 
-function gameLoop() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+function drawSplashes() {
+  ctx.fillStyle = "#8fe9ff";
+  for (let s of splashes) {
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function drawLevelText() {
+  ctx.fillStyle = "white";
+  ctx.font = "bold 22px Arial";
+  ctx.fillText(`Level ${level}`, 20, 32);
+}
+
+function draw() {
+  drawBackground();
+  drawWater();
+  drawPlatforms();
+  drawCoin();
+  drawEnemy();
   drawCrocodile();
-  requestAnimationFrame(gameLoop);
+  drawSplashes();
+  drawLevelText();
 }
 
-infoBtn.addEventListener("click", function () {
-  instructionsBox.classList.toggle("hidden");
-});
+// ---------- LOGIC ----------
+function rectHit(a, b) {
+  return (
+    a.x < b.x + b.w &&
+    a.x + a.w > b.x &&
+    a.y < b.y + b.h &&
+    a.y + a.h > b.y
+  );
+}
 
-startBtn.addEventListener("click", function () {
-  startScreen.classList.add("hidden");
-  instructionsBox.classList.add("hidden");
+function coinHit() {
+  return (
+    player.x < coin.x + coin.r &&
+    player.x + player.w > coin.x - coin.r &&
+    player.y < coin.y + coin.r &&
+    player.y + player.h > coin.y - coin.r
+  );
+}
+
+function resetPlayer() {
+  player.x = 80;
+  player.y = 250;
+  vy = 0;
+  jumps = 0;
+}
+
+function makeSplash() {
+  for (let i = 0; i < 8; i++) {
+    splashes.push({
+      x: player.x + player.w / 2,
+      y: waterY,
+      dx: (Math.random() - 0.5) * 6,
+      dy: Math.random() * -5,
+      life: 25
+    });
+  }
+}
+
+function loseLife(fromWater = false) {
+  if (fromWater) makeSplash();
+
+  lives--;
+  updateUI();
+
+  if (lives <= 0) {
+    lives = 0;
+    gameOver = true;
+    started = false;
+    clearInterval(timer);
+    updateUI();
+
+    canvas.classList.add("hidden");
+    if (gameOverScreen) gameOverScreen.classList.remove("hidden");
+
+    const finalScore = document.getElementById("finalScore");
+    if (finalScore) finalScore.innerText = `Your Score: ${level > 1 ? `${score}/${coinGoal}` : score}`;
+  } else {
+    resetPlayer();
+  }
+}
+
+function checkPlatforms() {
+  for (let p of platforms) {
+    if (
+      player.x + player.w > p.x &&
+      player.x < p.x + p.w &&
+      player.y + player.h >= p.y &&
+      player.y + player.h <= p.y + 18 &&
+      vy > 0
+    ) {
+      player.y = p.y - player.h;
+      vy = 0;
+      jumps = 0;
+    }
+  }
+}
+
+function nextLevel() {
+  level++;
+  score = 0;
+
+  if (level === 2) {
+    coinGoal = 20;
+    platforms = level2Platforms;
+    enemy.speed = 3.5;
+    enemy.x = 520;
+  } else if (level === 3) {
+    coinGoal = 30;
+    platforms = level3Platforms;
+    enemy.speed = 4.5;
+    enemy.x = 500;
+  } else {
+    won = true;
+    started = false;
+    clearInterval(timer);
+    canvas.classList.add("hidden");
+    if (winScreen) winScreen.classList.remove("hidden");
+    if (winScore) winScore.innerText = "You finished all 3 levels!";
+    return;
+  }
+
+  coin.x = 360;
+  coin.y = 140;
+  enemy.y = 260;
+  enemy.dir = 1;
+  resetPlayer();
+  updateUI();
+}
+function checkCoin() {
+  if (coinHit()) {score++;
+    updateUI();
+
+    let p = platforms[Math.floor(Math.random() * platforms.length)];
+    coin.x = p.x + p.w / 2;
+    coin.y = p.y - 15;
+
+    coin.x += Math.random() * 40 - 20;
+
+    if (score >= coinGoal) {
+      nextLevel();
+    }
+  }
+}
+
+function checkEnemy() {
+  if (rectHit(player, enemy)) {
+    loseLife(false);
+  }
+}
+
+function checkWater() {
+  if (player.y + player.h > waterY) {
+    loseLife(true);
+  }
+}
+
+function moveEnemy() {
+  enemy.x += enemy.speed * enemy.dir;
+  let p = platforms[2]; // Enemy moves on the 3rd platform
+  enemy.y = p.y - enemy.h;
+
+  if (enemy.x <= 430 || enemy.x + enemy.w >= 780) {
+    enemy.dir *= -1;
+  }
+}
+
+function updateSplashes() {
+  for (let s of splashes) {
+    s.x += s.dx;
+    s.y += s.dy;
+    s.dy += 0.3;
+    s.life--;
+  }
+  splashes = splashes.filter(s => s.life > 0);
+}
+
+function updateMovement() {
+  if (keys.right) {
+    player.x += 5;
+    facingRight = true;
+  }
+  if (keys.left) {
+    player.x -= 4.5;
+    facingRight = false;
+  }
+}
+
+function loop() {
+  updateSplashes();
+
+  if (!started || gameOver || won) {
+    draw();
+    return;
+  }
+
+  updateMovement();
+
+  vy += gravity;
+  player.y += vy;
+  vy *= 0.98;
+
+  if (player.x < 0) player.x = 0;
+  if (player.x + player.w > canvas.width) {
+    player.x = canvas.width - player.w;
+    if (player.y < 0) player.y = 0;
+  }
+
+  checkPlatforms();
+  moveEnemy();
+  checkCoin();
+  checkEnemy();
+  checkWater();
+
+  draw();
+  requestAnimationFrame(loop);
+}
+
+// ---------- RESET ----------
+function resetGame() {
+  level = 1;
+  coinGoal = 10;
+  score = 0;
+  lives = 3;
+  time = 0;
+  started = true;
+  gameOver = false;
+  won = false;
+  facingRight = true;
+  splashes = [];
+  keys.left = false;
+  keys.right = false;
+
+  platforms = level1Platforms;
+
+  coin.x = 360;
+  coin.y = 140;
+
+  enemy.x = 620;
+  enemy.y = 260;
+  enemy.dir = 1;
+  enemy.speed = 2;
+
+  resetPlayer();
+  updateUI();
+
+  if (gameOverScreen) gameOverScreen.classList.add("hidden");
+  if (winScreen) winScreen.classList.add("hidden");
+
   canvas.classList.remove("hidden");
-  gameLoop();
-});
+  gameInfo.classList.remove("hidden");
 
-document.addEventListener("keydown", function(event) {
+  startTimer();
+  loop();
+}
 
-  if (event.key === "ArrowRight") {
-    crocodile.x += 20;
-  }
+// ---------- BUTTONS ----------
+if (infoBtn) {
+  infoBtn.addEventListener("click", () => {
+    instructionsBox.classList.toggle("hidden");
+  });
+}
 
-  if (event.key === "ArrowLeft") {
-    crocodile.x -= 20;
-  }
-
-});
-startBtn.addEventListener("click", function () {
+if (startBtn) {
+  startBtn.addEventListener("click", () => {
+    startScreen.classList.add("hidden");
     instructionsBox.classList.add("hidden");
     canvas.classList.remove("hidden");
+    gameInfo.classList.remove("hidden");
 
-    document.getElementById("gameInfo").classList.remove("hidden");
+    if (!started) {
+      started = true;
+      gameOver = false;
+      won = false;
+      updateUI();
+      startTimer();
+      loop();
+    }
+  });
+}
 
-    gameLoop();
+if (restartBtn) {
+  restartBtn.addEventListener("click", resetGame);
+}
+
+if (nextBtn) {
+  nextBtn.addEventListener("click", resetGame);
+}
+
+// ---------- KEYS ----------
+document.addEventListener("keydown", (event) => {
+  if (!started || gameOver || won) return;
+
+  if (event.key === "ArrowRight") keys.right = true;
+  if (event.key === "ArrowLeft") keys.left = true;
+
+  if (event.key === " " && jumps < maxJumps) {
+    vy = -12;
+    jumps++;
+  }
 });
 
-let time = 0; 
-setInterval(function() {
-  time++;
-  document.getElementById("time").innerText = "Time: " + time;
-}, 1000)
-
- 
-
-
-
-  
-  //     console.log("AquaDash game started");
-  // const ctx = canvas.getContext("2d");
-
-  // let crocodile = {
-  // x: 50,
-  // y: 300,
-  // width: 50,
-  // height: 50,
-  // color: "green"
-  // };
+document.addEventListener("keyup", (event) => {
+  if (event.key === "ArrowRight") keys.right = false;
+  if (event.key === "ArrowLeft") keys.left = false;
 });

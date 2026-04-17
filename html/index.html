@@ -1,8 +1,12 @@
 <!doctype html>
-<html lang="nl">
+<html lang="ru">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Boldonse&display=swap"
+      rel="stylesheet"
+    />
     <title>AquaDash</title>
     <link rel="stylesheet" href="/css/style.css" />
   </head>
@@ -10,7 +14,6 @@
     <div class="start-screen" id="startScreen">
       <h1>AquaDash</h1>
       <p>Crocodile Adventure</p>
-
       <button id="startBtn">Start Game</button>
       <button id="infoBtn">Instructions</button>
     </div>
@@ -22,13 +25,26 @@
       <p>Collect coins and avoid enemies.</p>
     </div>
 
-    <canvas id="game" width="800" height="400" class="hidden"></canvas>
-   <div class="game-info hidden" id="gameInfo"> 
-  <p id="score">Score: 0</p>
-  <p id="lives">Lives: 3</p>
-  <p id="time">Time: 0</p>
-  </div>
-   <script src="/java script/script.js"></script>
+    <div class="game-info hidden" id="gameInfo">
+      <p id="score">Score: 0</p>
+      <p id="lives">Lives: 3</p>
+      <p id="time">Time: 00:00</p>
+    </div>
 
+    <canvas id="game" width="800" height="400" class="hidden"></canvas>
+
+    <div id="gameOverScreen" class="hidden">
+      <h1>GAME OVER</h1>
+      <p id="finalScore">Your Score: 0</p>
+      <button id="restartBtn">RESTART GAME</button>
+    </div>
+
+    <div id="winScreen" class="hidden">
+      <h1>YOU WIN</h1>
+      <p id="winScore">Your Score: 0</p>
+      <button id="nextBtn">PLAY AGAIN</button>
+    </div>
+
+    <script src="/java script/script.js"></script>
   </body>
 </html>
