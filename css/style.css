@@ -25,7 +25,7 @@ body {
 }
 
 .start-screen h1 {
-  font-size: 60px; /* было 72 */
+  font-size: 60px;
   margin-bottom: 10px;
   transition: all 0.3s ease;
 }
@@ -38,7 +38,7 @@ body {
 }
 
 .start-screen p {
-  font-size: 26px; /* было 32 */
+  font-size: 26px;
   margin-bottom: 25px;
   transition: all 0.3s ease;
 }
@@ -53,24 +53,24 @@ body {
 /* ИНСТРУКЦИИ */
 .instructions {
   text-align: center;
-  font-size: 22px; /* было 28 */
+  font-size: 22px;
   margin-bottom: 20px;
 }
 
 .instructions h2 {
-  font-size: 32px; /* было 42 */
+  font-size: 32px;
   margin-bottom: 15px;
 }
 
 .instructions p {
-  font-size: 20px; /* было 26 */
+  font-size: 20px;
   margin: 8px 0;
 }
 
 /* КНОПКИ */
 button {
-  font-size: 22px; /* было 28 */
-  padding: 14px 24px; /* было 16 28 */
+  font-size: 22px;
+  padding: 14px 24px;
   margin: 10px;
   border: none;
   border-radius: 12px;
@@ -99,17 +99,41 @@ canvas {
 
 /* ИНФОРМАЦИЯ В ИГРЕ */
 .game-info {
-  font-size: 26px; /* было 34 */
+  font-size: 22px;
   font-weight: bold;
-  margin-top: 20px;
+  margin-top: 16px;
   display: flex;
-  gap: 20px; /* было 30 */
+  gap: 18px;
   justify-content: center;
+  align-items: center;
   color: #00ffff;
   text-shadow:
     0 0 5px #00ffff,
     0 0 10px #00ffff,
     0 0 20px #00ffff;
+  flex-wrap: wrap;
+  line-height: 1;
+}
+
+#lives,
+#score,
+#time {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 110px;
+}
+
+#lives {
+  font-size: 22px;
+}
+
+#score {
+  font-size: 21px;
+}
+
+#time {
+  font-size: 18px;
 }
 
 /* GAME OVER */
@@ -128,14 +152,14 @@ canvas {
 }
 
 #gameOverScreen h1 {
-  font-size: 64px; /* было 80 */
+  font-size: 64px;
   color: #ff4d4d;
   text-shadow: 0 0 15px #ff4d4d;
   margin-bottom: 10px;
 }
 
 #gameOverScreen p {
-  font-size: 28px; /* было 36 */
+  font-size: 28px;
   color: #fff;
   margin-bottom: 30px;
 }
@@ -150,7 +174,7 @@ canvas {
   box-shadow: 0 0 25px #12e432;
 }
 
-/* WIN */
+/* WIN / LEVEL COMPLETE */
 #winScreen {
   position: absolute;
   top: 50%;
@@ -166,7 +190,7 @@ canvas {
 }
 
 #winScreen h1 {
-  font-size: 64px; /* было 80 */
+  font-size: 64px;
   color: #12e432;
   text-shadow:
     0 0 10px #12e432,
@@ -176,7 +200,7 @@ canvas {
 }
 
 #winScreen p {
-  font-size: 28px; /* было 36 */
+  font-size: 28px;
   color: #fff;
   margin-bottom: 30px;
 }

@@ -24,6 +24,8 @@ let time = 0;
 let started = false;
 let gameOver = false;
 let won = false;
+let paused = false;
+let levelComplete = false;
 
 let vy = 0;
 let gravity = 0.6;
@@ -35,6 +37,7 @@ let waterY = 360;
 let waveOffset = 0;
 let timer;
 let splashes = [];
+let hitFlash = 0;
 
 const keys = {
   left: false,
@@ -65,6 +68,25 @@ const level3Platforms = [
   { x: 720, y: 170, w: 80, h: 20 }
 ];
 
+const level4Platforms = [
+  { x: 0, y: 300, w: 90, h: 20 },
+  { x: 130, y: 260, w: 90, h: 20 },
+  { x: 260, y: 210, w: 90, h: 20 },
+  { x: 390, y: 160, w: 90, h: 20 },
+  { x: 520, y: 210, w: 90, h: 20 },
+  { x: 650, y: 170, w: 90, h: 20 }
+];
+
+const level5Platforms = [
+  { x: 0, y: 300, w: 80, h: 20 },
+  { x: 120, y: 250, w: 80, h: 20 },
+  { x: 240, y: 200, w: 80, h: 20 },
+  { x: 360, y: 150, w: 80, h: 20 },
+  { x: 480, y: 200, w: 80, h: 20 },
+  { x: 600, y: 150, w: 80, h: 20 },
+  { x: 720, y: 100, w: 60, h: 20 }
+];
+
 let platforms = level1Platforms;
 
 // ---------- UI ----------
@@ -75,19 +97,72 @@ function formatTime(seconds) {
 }
 
 function updateUI() {
-  document.getElementById("score").innerText = `Coins: ${score}/${coinGoal}`;
-  document.getElementById("lives").innerText = `Lives: ${lives}`;
-  document.getElementById("time").innerText = `Time: ${formatTime(time)}`;
+  document.getElementById("score").innerText = "🪙 " + score;
+  document.getElementById("lives").innerText = "❤️".repeat(lives);
+  document.getElementById("time").innerText = "⏱️ " + formatTime(time);
 }
 
 function startTimer() {
   clearInterval(timer);
   timer = setInterval(() => {
-    if (started && !gameOver && !won) {
+    if (started && !gameOver && !won && !paused && !levelComplete) {
       time++;
       updateUI();
     }
   }, 1000);
+}
+
+// ---------- LEVEL ----------
+function applyLevel() {
+  if (level === 1) {
+    coinGoal = 10;
+    platforms = level1Platforms;
+    enemy.speed = 2;
+    enemy.x = 620;
+  } else if (level === 2) {
+    coinGoal = 20;
+    platforms = level2Platforms;
+    enemy.speed = 3.5;
+    enemy.x = 520;
+  } else if (level === 3) {
+    coinGoal = 30;
+    platforms = level3Platforms;
+    enemy.speed = 4.5;
+    enemy.x = 500;
+  } else if (level === 4) {
+    coinGoal = 40;
+    platforms = level4Platforms;
+    enemy.speed = 5;
+    enemy.x = 450;
+  } else if (level === 5) {
+    coinGoal = 50;
+    platforms = level5Platforms;
+    enemy.speed = 5.5;
+    enemy.x = 400;
+  }
+
+  enemy.dir = 1;
+  enemy.y = 260;
+  resetPlayer();
+  spawnCoinOnPlatform();
+  updateUI();
+}
+
+function showLevelScreen(final = false) {
+  started = false;
+  levelComplete = !final;
+  won = final;
+  clearInterval(timer);
+  canvas.classList.add("hidden");
+  winScreen.classList.remove("hidden");
+
+  if (final) {
+    winScore.innerText = "You finished all 5 levels!";
+    nextBtn.innerText = "PLAY AGAIN";
+  } else {
+    winScore.innerText = `Level ${level} complete! Next: ${level + 1}`;
+    nextBtn.innerText = "NEXT LEVEL";
+  }
 }
 
 // ---------- DRAW ----------
@@ -160,6 +235,7 @@ function drawEnemy() {
   ctx.fillStyle = "black";
   ctx.fillRect(x + 11, y + 12, 3, 4);
   ctx.fillRect(x + 33, y + 12, 3, 4);
+
   ctx.fillStyle = "#7a1208";
   ctx.fillRect(x + 4, y + 28, 4, 6);
   ctx.fillRect(x + 14, y + 28, 4, 6);
@@ -180,41 +256,33 @@ function drawCrocodile() {
   const y = player.y;
   const jumpOffset = vy < 0 ? -4 : vy > 0 ? 4 : 0;
 
-  // tail
   ctx.fillStyle = "#3a8f08";
   ctx.fillRect(x - 16, y + 18 + jumpOffset, 16, 7);
 
-  // body
   ctx.fillStyle = "#59d10b";
   ctx.fillRect(x, y + 12 + jumpOffset, 52, 22);
 
-  // back scales
   ctx.fillStyle = "#3ea108";
   ctx.fillRect(x + 6, y + 8 + jumpOffset, 8, 6);
   ctx.fillRect(x + 18, y + 5 + jumpOffset, 8, 7);
   ctx.fillRect(x + 30, y + 8 + jumpOffset, 8, 6);
 
-  // head
   ctx.fillStyle = "#63e20e";
   ctx.fillRect(x + 42, y + 2 + jumpOffset, 30, 16);
 
-  // jaw
   ctx.fillStyle = "#4fb40d";
   ctx.fillRect(x + 50, y + 15 + jumpOffset, 22, 8);
 
-  // eye
   ctx.fillStyle = "white";
   ctx.fillRect(x + 54, y + 5 + jumpOffset, 9, 9);
 
   ctx.fillStyle = "black";
   ctx.fillRect(x + 58, y + 8 + jumpOffset, 3, 4);
 
-  // teeth
   ctx.fillStyle = "white";
   ctx.fillRect(x + 55, y + 18 + jumpOffset, 4, 4);
   ctx.fillRect(x + 63, y + 18 + jumpOffset, 4, 4);
 
-  // legs
   ctx.fillStyle = "#2d7806";
   ctx.fillRect(x + 8, y + 32 + jumpOffset, 8, 8);
   ctx.fillRect(x + 28, y + 32 + jumpOffset, 8, 8);
@@ -237,6 +305,14 @@ function drawLevelText() {
   ctx.fillText(`Level ${level}`, 20, 32);
 }
 
+function drawPauseIcon() {
+  if (paused) {
+    ctx.fillStyle = "rgba(255,255,255,0.9)";
+    ctx.font = "60px Arial";
+    ctx.fillText("⏸", 370, 220);
+  }
+}
+
 function draw() {
   drawBackground();
   drawWater();
@@ -246,6 +322,7 @@ function draw() {
   drawCrocodile();
   drawSplashes();
   drawLevelText();
+  drawPauseIcon();
 }
 
 // ---------- LOGIC ----------
@@ -262,7 +339,8 @@ function coinHit() {
   return (
     player.x < coin.x + coin.r &&
     player.x + player.w > coin.x - coin.r &&
-    player.y < coin.y + coin.r &&
+    player.y < coin.
+    y + coin.r &&
     player.y + player.h > coin.y - coin.r
   );
 }
@@ -272,6 +350,12 @@ function resetPlayer() {
   player.y = 250;
   vy = 0;
   jumps = 0;
+}
+
+function spawnCoinOnPlatform() {
+  let p = platforms[Math.floor(Math.random() * platforms.length)];
+  coin.x = p.x + p.w / 2 + (Math.random() * 40 - 20);
+  coin.y = p.y - 15;
 }
 
 function makeSplash() {
@@ -287,6 +371,7 @@ function makeSplash() {
 }
 
 function loseLife(fromWater = false) {
+  hitFlash = 15;
   if (fromWater) makeSplash();
 
   lives--;
@@ -303,7 +388,7 @@ function loseLife(fromWater = false) {
     if (gameOverScreen) gameOverScreen.classList.remove("hidden");
 
     const finalScore = document.getElementById("finalScore");
-    if (finalScore) finalScore.innerText = `Your Score: ${level > 1 ? `${score}/${coinGoal}` : score}`;
+    if (finalScore) finalScore.innerText = `Your Score: ${score}`;
   } else {
     resetPlayer();
   }
@@ -326,45 +411,37 @@ function checkPlatforms() {
 }
 
 function nextLevel() {
-  level++;
-  score = 0;
-
-  if (level === 2) {
-    coinGoal = 20;
-    platforms = level2Platforms;
-    enemy.speed = 3.5;
-    enemy.x = 520;
-  } else if (level === 3) {
-    coinGoal = 30;
-    platforms = level3Platforms;
-    enemy.speed = 4.5;
-    enemy.x = 500;
-  } else {
-    won = true;
-    started = false;
-    clearInterval(timer);
-    canvas.classList.add("hidden");
-    if (winScreen) winScreen.classList.remove("hidden");
-    if (winScore) winScore.innerText = "You finished all 3 levels!";
+  if (level >= 5) {
+    showLevelScreen(true);
     return;
   }
-
-  coin.x = 360;
-  coin.y = 140;
-  enemy.y = 260;
-  enemy.dir = 1;
-  resetPlayer();
-  updateUI();
+  showLevelScreen(false);
 }
+
+function startNextLevel() {
+  level++;
+  score = 0;
+  lives = 3;
+  time = 0;
+  paused = false;
+  levelComplete = false;
+  started = true;
+
+  applyLevel();
+
+  winScreen.classList.add("hidden");
+  canvas.classList.remove("hidden");
+  gameInfo.classList.remove("hidden");
+
+  startTimer();
+  loop();
+}
+
 function checkCoin() {
-  if (coinHit()) {score++;
+  if (coinHit()) {
+    score++;
     updateUI();
-
-    let p = platforms[Math.floor(Math.random() * platforms.length)];
-    coin.x = p.x + p.w / 2;
-    coin.y = p.y - 15;
-
-    coin.x += Math.random() * 40 - 20;
+    spawnCoinOnPlatform();
 
     if (score >= coinGoal) {
       nextLevel();
@@ -374,6 +451,7 @@ function checkCoin() {
 
 function checkEnemy() {
   if (rectHit(player, enemy)) {
+    vy = -3;
     loseLife(false);
   }
 }
@@ -386,10 +464,8 @@ function checkWater() {
 
 function moveEnemy() {
   enemy.x += enemy.speed * enemy.dir;
-  let p = platforms[2]; // Enemy moves on the 3rd platform
-  enemy.y = p.y - enemy.h;
 
-  if (enemy.x <= 430 || enemy.x + enemy.w >= 780) {
+  if (enemy.x <= 0 || enemy.x + enemy.w >= canvas.width) {
     enemy.dir *= -1;
   }
 }
@@ -418,8 +494,14 @@ function updateMovement() {
 function loop() {
   updateSplashes();
 
-  if (!started || gameOver || won) {
+  if (!started || gameOver || won || levelComplete) {
     draw();
+    return;
+  }
+
+  if (paused) {
+    draw();
+    requestAnimationFrame(loop);
     return;
   }
 
@@ -429,10 +511,14 @@ function loop() {
   player.y += vy;
   vy *= 0.98;
 
+  if (player.y < 0) {
+    player.y = 0;
+    vy = 0;
+  }
+
   if (player.x < 0) player.x = 0;
   if (player.x + player.w > canvas.width) {
     player.x = canvas.width - player.w;
-    if (player.y < 0) player.y = 0;
   }
 
   checkPlatforms();
@@ -442,6 +528,13 @@ function loop() {
   checkWater();
 
   draw();
+
+  if (hitFlash > 0) {
+    ctx.fillStyle = "rgba(255,0,0,0.3)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    hitFlash--;
+  }
+
   requestAnimationFrame(loop);
 }
 
@@ -455,22 +548,14 @@ function resetGame() {
   started = true;
   gameOver = false;
   won = false;
+  paused = false;
+  levelComplete = false;
   facingRight = true;
   splashes = [];
   keys.left = false;
   keys.right = false;
 
-  platforms = level1Platforms;
-
-  coin.x = 360;
-  coin.y = 140;
-
-  enemy.x = 620;
-  enemy.y = 260;
-  enemy.dir = 1;
-  enemy.speed = 2;
-
-  resetPlayer();
+  applyLevel();
   updateUI();
 
   if (gameOverScreen) gameOverScreen.classList.add("hidden");
@@ -501,6 +586,9 @@ if (startBtn) {
       started = true;
       gameOver = false;
       won = false;
+      paused = false;
+      levelComplete = false;
+      applyLevel();
       updateUI();
       startTimer();
       loop();
@@ -513,17 +601,28 @@ if (restartBtn) {
 }
 
 if (nextBtn) {
-  nextBtn.addEventListener("click", resetGame);
+  nextBtn.addEventListener("click", () => {
+    if (won) {
+      resetGame();
+    } else if (levelComplete) {
+      startNextLevel();
+    }
+  });
 }
 
 // ---------- KEYS ----------
 document.addEventListener("keydown", (event) => {
-  if (!started || gameOver || won) return;
+  if (!started || gameOver || won || levelComplete) return;
 
   if (event.key === "ArrowRight") keys.right = true;
   if (event.key === "ArrowLeft") keys.left = true;
 
-  if (event.key === " " && jumps < maxJumps) {
+  if (event.key === "Escape") {
+    paused = !paused;
+    if (!paused) loop();
+  }
+
+  if (event.key === " " && jumps < maxJumps && !paused) {
     vy = -12;
     jumps++;
   }
