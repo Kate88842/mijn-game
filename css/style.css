@@ -108,9 +108,10 @@ canvas {
   align-items: center;
   color: #00ffff;
   text-shadow:
-    0 0 5px #00ffff,
-    0 0 10px #00ffff,
-    0 0 20px #00ffff;
+    0 0 1px #00ffff,
+    0 0 2px #00ffff,
+    0 0 4px #00ffff;
+    opacity: 0.9;
   flex-wrap: wrap;
   line-height: 1;
 }

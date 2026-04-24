@@ -115,27 +115,27 @@ function startTimer() {
 // ---------- LEVEL ----------
 function applyLevel() {
   if (level === 1) {
-    coinGoal = 10;
+    coinGoal = 5;
     platforms = level1Platforms;
     enemy.speed = 2;
     enemy.x = 620;
   } else if (level === 2) {
-    coinGoal = 20;
+    coinGoal = 10;
     platforms = level2Platforms;
     enemy.speed = 3.5;
     enemy.x = 520;
   } else if (level === 3) {
-    coinGoal = 30;
+    coinGoal = 15;
     platforms = level3Platforms;
     enemy.speed = 4.5;
     enemy.x = 500;
   } else if (level === 4) {
-    coinGoal = 40;
+    coinGoal = 20;
     platforms = level4Platforms;
     enemy.speed = 5;
     enemy.x = 450;
   } else if (level === 5) {
-    coinGoal = 50;
+    coinGoal = 25;
     platforms = level5Platforms;
     enemy.speed = 5.5;
     enemy.x = 400;
@@ -175,17 +175,26 @@ function drawBackground() {
 }
 
 function drawWater() {
-  ctx.fillStyle = "#1e90ff";
-  ctx.fillRect(0, waterY, canvas.width, canvas.height - waterY);
-
+ ctx.fillStyle = "#1e90ff";
   ctx.fillStyle = "#67d4ff";
-  for (let i = -40; i < canvas.width + 40; i += 40) {
-    ctx.beginPath();
-    ctx.arc(i + waveOffset, waterY, 20, 0, Math.PI, true);
-    ctx.fill();
-  }
+  ctx.beginPath();
+ctx.moveTo(0, waterY);
+for (let i = 0; i <= canvas.width; i += 10) {
+  let wave = Math.sin((i + waveOffset) * 0.04) * 6;
+  ctx.lineTo(i, waterY + wave);
+}
 
-  waveOffset += 1.8;
+ctx.lineTo(canvas.width, canvas.height);
+ctx.lineTo(0, canvas.height);
+ctx.closePath();
+
+ctx.fillStyle = "#1e90ff";
+ctx.fill();
+ctx.globalAlpha = 0.9;
+ctx.strokeStyle = "#67d4ff";
+ctx.lineWidth = 2;
+ctx.stroke();
+  waveOffset += 0.8;
   if (waveOffset >= 40) waveOffset = 0;
 }
 
@@ -451,7 +460,7 @@ function checkCoin() {
 
 function checkEnemy() {
   if (rectHit(player, enemy)) {
-    vy = -3;
+    vy = -8;
     loseLife(false);
   }
 }
@@ -463,6 +472,8 @@ function checkWater() {
 }
 
 function moveEnemy() {
+  enemy.y = platforms[2].y - enemy.h; // ← ВОТ ЭТА СТРОКА
+
   enemy.x += enemy.speed * enemy.dir;
 
   if (enemy.x <= 0 || enemy.x + enemy.w >= canvas.width) {
@@ -481,16 +492,18 @@ function updateSplashes() {
 }
 
 function updateMovement() {
+  let speed = 4 + level; // скорость растёт с уровнем
+
   if (keys.right) {
-    player.x += 5;
+    player.x += speed;
     facingRight = true;
   }
+
   if (keys.left) {
-    player.x -= 4.5;
+    player.x -= speed;
     facingRight = false;
   }
 }
-
 function loop() {
   updateSplashes();
 
@@ -510,6 +523,7 @@ function loop() {
   vy += gravity;
   player.y += vy;
   vy *= 0.98;
+  
 
   if (player.y < 0) {
     player.y = 0;
